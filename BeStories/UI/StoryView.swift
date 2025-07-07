@@ -3,11 +3,15 @@ import SwiftUI
 struct StoryView: View {
   let name: String
   let stories: [Story]
+  var currentStory: Story? { stories[safe: currentIndex] }
   @State private var currentIndex: Int = 0
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 0) {
+      Spacer()
       storyImage()
+        .overlay { navigationButtons() }
+      Spacer()
     }
     .safeAreaInset(edge: .top) {
       VStack {
@@ -15,11 +19,11 @@ struct StoryView: View {
         dateTimeView()
       }
     }
+    .safeAreaInset(edge: .bottom) {
+      if let currentStory { likeButtons(story: currentStory) }
+    }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.background)
-    .onTapGesture {
-      withAnimation { nextStoryTapped() }
-    }
     .colorScheme(.dark)
   }
 }
@@ -62,6 +66,37 @@ private extension StoryView {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.horizontal)
   }
+
+  func likeButtons(story: Story) -> some View {
+    HStack(spacing: 16) {
+      Spacer()
+      Button(action: {}) {
+        Image(systemName: "heart")
+          .symbolVariant(story.isLiked ? .fill : .none)
+      }
+      .font(.title2)
+      .buttonBorderShape(.circle)
+      .buttonStyle(.borderedProminent)
+      .tint(.red)
+    }
+    .padding(.horizontal)
+  }
+
+  func navigationButtons() -> some View {
+    HStack {
+      Button(
+        action: { currentIndex -= 1 },
+        label: { Rectangle().fill(.clear) }
+      )
+      .disabled(currentIndex == 0)
+
+      Button(
+        action: { nextStoryTapped() },
+        label: { Rectangle().fill(.clear) }
+      )
+    }
+    .padding(.horizontal)
+  }
 }
 
 // MARK: - Formatting
@@ -79,36 +114,21 @@ private extension StoryView {
 #Preview {
   StoryView(
     name: "Mr Anderson",
-    stories: [
-    Story(
-      id: "1",
-      image: URL(string: "https://picsum.photos/seed/1/900/1600")!,
-      date: Date()
-    ),
-    Story(
-      id: "2",
-      image: URL(string: "https://picsum.photos/seed/2/800/600")!,
-      date: Date().addingTimeInterval(-86400)
-    ),
-    Story(
-      id: "3",
-      image: URL(string: "https://picsum.photos/seed/3/800/600")!,
-      date: Date().addingTimeInterval(-172800)
-    ),
-    Story(
-      id: "4",
-      image: URL(string: "https://picsum.photos/seed/4/800/600")!,
-      date: Date().addingTimeInterval(-259200)
-    ),
-    Story(
-      id: "5",
-      image: URL(string: "https://picsum.photos/seed/5/800/600")!,
-      date: Date().addingTimeInterval(-345600)
-    ),
-    Story(
-      id: "6",
-      image: URL(string: "https://picsum.photos/seed/6/800/600")!,
-      date: Date().addingTimeInterval(-432000)
-    )
-  ])
+    stories: .mocks(user: 0)
+  )
+}
+
+extension [Story] {
+  static func mocks(user: User.ID) -> [Story] {
+    let initial = user * 10
+    let final = initial + 10
+    return (initial ..< final).map { id in
+      Story(
+        id: "\(id)",
+        image: URL(string: "https://picsum.photos/seed/\(id)/450/800")!,
+        date: Date().addingTimeInterval(-Double(id) * 86400),
+        isLiked: id.isMultiple(of: 2)
+      )
+    }
+  }
 }
