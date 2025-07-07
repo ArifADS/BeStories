@@ -62,12 +62,12 @@ actor PersistenceManager {
   }
 
   func hydratedStories(_ stories: [Story]) -> [Story] {
-    return stories.map {
-      guard let persisted = self.stories.first(where: { $0.storyID == $0.id }) else {
-        return $0
+    return stories.map { story in
+      guard let persisted = self.stories.first(where: { $0.storyID == story.id }) else {
+        return story
       }
 
-      var story = $0
+      var story = story
       story.liked = persisted.liked
       story.seen = persisted.seen
       return story
