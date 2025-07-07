@@ -10,11 +10,9 @@ import SwiftData
 
 struct ContentView: View {
   @Namespace private var namespace
-  @Environment(\.modelContext) private var modelContext
-  @Query private var items: [Item]
-  let service = StoriesService()
   @State private var users = [User]()
   @State private var path = NavigationPath()
+  let service: StoriesService
 
   var body: some View {
     NavigationStack(path: $path) {
@@ -35,10 +33,6 @@ struct ContentView: View {
           "BeStories",
           systemImage: "person.3.sequence.fill"
         )
-
-
-
-        Spacer()
       }
       .navigationDestination(for: ScreenItem.self) {
         makeScreen(item: $0)
@@ -76,6 +70,5 @@ private extension ContentView {
 }
 
 #Preview {
-  ContentView()
-    .modelContainer(for: Item.self, inMemory: true)
+  ContentView(service: .mock())
 }

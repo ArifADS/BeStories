@@ -72,7 +72,7 @@ private extension StoryView {
       Spacer()
       Button(action: {}) {
         Image(systemName: "heart")
-          .symbolVariant(story.isLiked ? .fill : .none)
+          .symbolVariant(story.liked ? .fill : .none)
       }
       .font(.title2)
       .buttonBorderShape(.circle)
@@ -127,7 +127,7 @@ extension [Story] {
         id: "\(id)",
         image: URL(string: "https://picsum.photos/seed/\(id)/450/800")!,
         date: Date().addingTimeInterval(-Double(id) * 86400),
-        isLiked: id.isMultiple(of: 2)
+        liked: id.isMultiple(of: 2)
       )
     }
   }
