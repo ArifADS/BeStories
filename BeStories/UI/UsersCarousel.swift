@@ -1,7 +1,11 @@
 import SwiftUI
 
 struct UsersCarousel: View {
+  @Namespace private var safeNamespace
   let users: [User]
+  var namespace: Namespace.ID?
+  var actions: Actions?
+  let isLoading = true
 
 
   var body: some View {
@@ -9,10 +13,26 @@ struct UsersCarousel: View {
       LazyHStack(spacing: 24) {
         ForEach(users) { user in
           UserStoryView(user: user)
+            .matchedTransitionSource(id: "zoom_\(user.id)", in: namespace ?? safeNamespace)
+            .onTapGesture {
+              actions?.onUserSelected(user)
+            }
+        }
+
+        if isLoading {
+          ProgressView()
+            .frame(width: 100, height: 100)
         }
       }
       .padding()
     }
+    .frame(height: 150)
+  }
+}
+
+extension UsersCarousel {
+  struct Actions {
+    let onUserSelected: (User) -> Void
   }
 }
 

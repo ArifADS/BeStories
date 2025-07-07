@@ -9,22 +9,57 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+  @Namespace private var namespace
   @Environment(\.modelContext) private var modelContext
   @Query private var items: [Item]
   let service = StoriesService()
   @State private var users = [User]()
+  @State private var path = NavigationPath()
 
   var body: some View {
-    List {
+    NavigationStack(path: $path) {
+      VStack {
+        UsersCarousel(
+          users: users,
+          namespace: namespace,
+          actions: .init(
+            onUserSelected: { user in
+              path.append(ScreenItem.user(user))
+            }
+          )
+        )
 
-    }
-    .navigationTitle("BeStories")
-    .navigationBarTitleDisplayMode(.inline)
-    .safeAreaInset(edge: .top) {
-      UsersCarousel(users: users)
+        Divider()
+
+        ContentUnavailableView(
+          "BeStories",
+          systemImage: "person.3.sequence.fill"
+        )
+
+
+
+        Spacer()
+      }
+      .navigationDestination(for: ScreenItem.self) {
+        makeScreen(item: $0)
+      }
     }
     .task {
       await fetchUsers()
+    }
+  }
+}
+
+private extension ContentView {
+  func makeScreen(item: ScreenItem) -> some View {
+    switch item {
+    case .user(let user):
+      StoryView(
+        name: user.name,
+        stories: .mocks(user: user.id)
+      )
+      .navigationTransition(.zoom(sourceID: "zoom_\(user.id)", in: namespace))
+      .toolbarVisibility(.hidden, for: .navigationBar)
     }
   }
 }
