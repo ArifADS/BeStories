@@ -40,6 +40,27 @@ actor PersistenceManager {
     }
   }
 
+  func setSeen(story: Story, user: User) {
+    if let index = stories.firstIndex(where: { $0.storyID == story.id }) {
+      stories[index].seen = true
+    } else {
+      let newStory = StoryData(
+        id: UUID().uuidString,
+        userID: user.id,
+        storyID: story.id,
+        liked: story.liked,
+        seen: true
+      )
+      stories.append(newStory)
+    }
+    
+    do {
+      try storage.saveData(stories)
+    } catch {
+      print("Failed to save stories: \(error)")
+    }
+  }
+
   func hydratedStories(_ stories: [Story]) -> [Story] {
     return stories.map {
       guard let persisted = self.stories.first(where: { $0.storyID == $0.id }) else {

@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct StoryView: View {
+  @Environment(\.storyAction) private var actions
+  @State private var currentIndex: Int = 0
   let name: String
   let stories: [Story]
   var currentStory: Story? { stories[safe: currentIndex] }
-  @State private var currentIndex: Int = 0
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -22,6 +23,7 @@ struct StoryView: View {
     .safeAreaInset(edge: .bottom) {
       if let currentStory { likeButtons(story: currentStory) }
     }
+    .animation(.bouncy, value: currentIndex)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.background)
     .colorScheme(.dark)
@@ -32,7 +34,9 @@ struct StoryView: View {
 // MARK: UI
 private extension StoryView {
   func storyImage() -> some View {
-    AsyncImage(url: stories[safe: currentIndex]?.image) { image in
+    let story = stories[safe: currentIndex]
+
+    return AsyncImage(url: story?.image) { image in
       image
         .resizable()
         .aspectRatio(contentMode: .fit)
@@ -41,6 +45,7 @@ private extension StoryView {
     } placeholder: {
       ProgressView()
     }
+    .id(story?.id ?? "placeholder")
   }
 
   func progress() -> some View {
@@ -70,7 +75,7 @@ private extension StoryView {
   func likeButtons(story: Story) -> some View {
     HStack(spacing: 16) {
       Spacer()
-      Button(action: {}) {
+      Button(action: { Task { await actions.onLiked(story) } }) {
         Image(systemName: "heart")
           .symbolVariant(story.liked ? .fill : .none)
       }
@@ -116,19 +121,4 @@ private extension StoryView {
     name: "Mr Anderson",
     stories: .mocks(user: 0)
   )
-}
-
-extension [Story] {
-  static func mocks(user: User.ID) -> [Story] {
-    let initial = user * 10
-    let final = initial + 10
-    return (initial ..< final).map { id in
-      Story(
-        id: "\(id)",
-        image: URL(string: "https://picsum.photos/seed/\(id)/450/800")!,
-        date: Date().addingTimeInterval(-Double(id) * 86400),
-        liked: id.isMultiple(of: 2)
-      )
-    }
-  }
 }

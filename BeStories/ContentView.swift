@@ -11,6 +11,7 @@ import SwiftData
 struct ContentView: View {
   @Namespace private var namespace
   @State private var users = [User]()
+  @State private var stories: [User.ID: [Story]] = [:]
   @State private var path = NavigationPath()
   let service: StoriesService
 
@@ -50,8 +51,10 @@ private extension ContentView {
     case .user(let user):
       StoryView(
         name: user.name,
-        stories: .mocks(user: user.id)
+        stories: stories[user.id, default: []],
       )
+      .task { await fetchStories(for: user) }
+      .environment(\.storyAction, createStoryActions(user: user))
       .navigationTransition(.zoom(sourceID: "zoom_\(user.id)", in: namespace))
       .toolbarVisibility(.hidden, for: .navigationBar)
     }
@@ -66,6 +69,29 @@ private extension ContentView {
     } catch {
       print("Failed to fetch users: \(error)")
     }
+  }
+
+  func fetchStories(for user: User) async {
+    do {
+      let stories = try await service.fetchStories(userId: user.id)
+      self.stories[user.id] = stories
+    } catch {
+      print("Failed to fetch stories for user \(user.id): \(error)")
+    }
+  }
+
+  func createStoryActions(user: User) -> StoryActions {
+    .init(
+      onSeen: { story in
+        await service.setSeen(story: story, user: user)
+      },
+      onLiked: { story in
+        await service.setLiked(story: story, user: user)
+        if let index = self.stories[user.id]?.firstIndex(where: { $0.id == story.id }) {
+          self.stories[user.id]?[index].liked.toggle()
+        }
+      }
+    )
   }
 }
 

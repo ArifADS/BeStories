@@ -18,6 +18,14 @@ struct StoriesService {
 
     return await persistence.hydratedStories(stories)
   }
+
+  func setSeen(story: Story, user: User) async {
+    await persistence.setSeen(story: story, user: user)
+  }
+
+  func setLiked(story: Story, user: User) async {
+    await persistence.likeStory(story, user: user)
+  }
 }
 
 private extension StoriesService {
@@ -37,7 +45,6 @@ private enum ServiceError: Error {
 private struct PaginatedUsersResponse: Decodable {
   let pages: [Page]
 
-
   struct Page: Decodable {
     let users: [UserDTO]
   }
@@ -46,5 +53,19 @@ private struct PaginatedUsersResponse: Decodable {
 extension StoriesService {
   static func mock() -> Self {
     .init(persistence: .init())
+  }
+}
+
+extension [Story] {
+  static func mocks(user: User.ID) -> [Story] {
+    let initial = user * 10
+    let final = initial + 10
+    return (initial ..< final).map { id in
+      Story(
+        id: "\(id)",
+        image: URL(string: "https://picsum.photos/seed/\(id)/450/800")!,
+        date: Date().addingTimeInterval(-Double(id) * 86400)
+      )
+    }
   }
 }
