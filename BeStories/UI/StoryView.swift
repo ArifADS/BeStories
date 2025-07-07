@@ -46,6 +46,7 @@ private extension StoryView {
       ProgressView()
     }
     .id(story?.id ?? "placeholder")
+    .transition(.blurReplace)
   }
 
   func progress() -> some View {
@@ -54,6 +55,7 @@ private extension StoryView {
         Capsule()
           .fill(index == currentIndex ? Color.accentColor : Color.gray.opacity(0.5))
           .frame(maxWidth: .infinity)
+          .onTapGesture { currentIndex = index }
       }
     }
     .frame(height: 8)
@@ -76,11 +78,15 @@ private extension StoryView {
     HStack(spacing: 16) {
       Spacer()
       Button(action: { Task { await actions.onLiked(story) } }) {
-        Image(systemName: "heart")
-          .symbolVariant(story.liked ? .fill : .none)
+        Label(
+          title: { Text(story.liked ? "Liked!" : "Like") },
+          icon: { Image(systemName: "heart") }
+        )
+        .labelStyle(.titleAndIcon)
+        .symbolVariant(story.liked ? .fill : .none)
       }
-      .font(.title2)
-      .buttonBorderShape(.circle)
+      .font(.body)
+      .buttonBorderShape(.capsule)
       .buttonStyle(.borderedProminent)
       .tint(.red)
     }
